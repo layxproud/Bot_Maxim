@@ -30,9 +30,11 @@ for event in longpoll.listen():
                     if words[1] == "chance":
                         try:
                             if int(words[2]) in range (0, 100):
-                                chance = words[2]
+                                chance = int(words[2])
                                 sender(id, f"Установлен шанс ответа {chance}")
+                            else:
+                                sender(id, "Ожидался шанс в пределах 0-100")
                         except:
-                            sender(id, "Ожидался шанс в пределах 0-100")
+                            sender(id, "Вы забыли указать шанс")
                 except:
                     sender(id, "Неизвестная команда")
