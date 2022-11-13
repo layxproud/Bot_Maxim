@@ -4,13 +4,14 @@ import vk_api
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 
 class Bot:
-    def __init__(self, token, group_id):
+    def __init__(self, token, group_id, file_dir, chance):
         self.bot_token = token
         self.group_id = group_id
-        self.chance = 100
+        self.chance = chance
+        self.dir = file_dir
         self.vk_session = vk_api.VkApi(token = self.bot_token)
         self.session_api = self.vk_session.get_api()
-        self.longpoll = VkBotLongPoll(self.vk_session, group_id = 217147732)
+        self.longpoll = VkBotLongPoll(self.vk_session, group_id = self.group_id)
         
     def sender(self, id, text):
         self.vk_session.method('messages.send', {
@@ -23,14 +24,12 @@ class Bot:
         self.chance = chance
         return self.chance
     
-    def sayRandom(self, dir):
-        self.file_dir = dir
-        with open(self.file_dir, 'r') as file:
+    def sayRandom(self):
+        with open(self.dir, 'r', encoding='utf-8') as file:
             allText = file.read()
             words = list(map(str, allText.split()))
             
             return(random.choice(words))
-
 
     def listen(self):
         for event in self.longpoll.listen():
@@ -60,7 +59,7 @@ class Bot:
                         random_message = random.randrange(1, 100, 1)
                         print(random_message)
                         if random_message in range (1, self.chance + 1):
-                            self.sender(id, self.sayRandom("lines.txt"))
+                            self.sender(id, self.sayRandom())
     
 
 
