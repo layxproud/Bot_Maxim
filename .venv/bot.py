@@ -26,10 +26,8 @@ class Bot:
     
     def sayRandom(self):
         with open(self.dir, 'r', encoding='utf-8') as file:
-            allText = file.read()
-            words = list(map(str, allText.split()))
-            
-            return(random.choice(words))
+            lines = file.read().splitlines()
+            return random.choice(lines)
 
     def listen(self):
         for event in self.longpoll.listen():
