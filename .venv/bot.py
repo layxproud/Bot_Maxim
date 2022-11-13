@@ -22,6 +22,15 @@ class Bot:
     def change_chance(self, chance):
         self.chance = chance
         return self.chance
+    
+    def sayRandom(self, dir):
+        self.file_dir = dir
+        with open(self.file_dir, 'r') as file:
+            allText = file.read()
+            words = list(map(str, allText.split()))
+            
+            return(random.choice(words))
+
 
     def listen(self):
         for event in self.longpoll.listen():
@@ -38,7 +47,6 @@ class Bot:
                             if words[1] == "chance":
                                 try:
                                     if int(words[2]) in range (0, 101):
-                                        # chance = int(words[2])
                                         self.sender(id, f"Установлен шанс ответа {self.change_chance(int(words[2]))}")
                                     else:
                                         self.sender(id, "Ожидался шанс в пределах 0-100")
@@ -52,8 +60,7 @@ class Bot:
                         random_message = random.randrange(1, 100, 1)
                         print(random_message)
                         if random_message in range (1, self.chance + 1):
-                            self.sender(id, "Пися попа")
-
+                            self.sender(id, self.sayRandom("lines.txt"))
     
 
 
