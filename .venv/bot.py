@@ -1,4 +1,6 @@
 import random
+import requests
+import re
 
 import vk_api
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
@@ -29,35 +31,38 @@ class Bot:
             lines = file.read().splitlines()
             return random.choice(lines)
 
-    def listen(self):
-        for event in self.longpoll.listen():
-            if event.type == VkBotEventType.MESSAGE_NEW:
-                
-                msg = event.object.message['text'].lower()
-                words = msg.split()
-                
-                if event.from_chat:
-                    id = event.chat_id 
-                    
-                    if words[0] == "max":
-                        try:
-                            if words[1] == "chance":
-                                try:
-                                    if int(words[2]) in range (0, 101):
-                                        self.sender(id, f"Установлен шанс ответа {self.change_chance(int(words[2]))}")
-                                    else:
-                                        self.sender(id, "Ожидался шанс в пределах 0-100")
-                                except:
-                                    self.sender(id, "Вы забыли указать шанс")
-                        except:
-                            self.sender(id, "Неизвестная команда")
-                            
-                    else:
-                        print(self.chance)
-                        random_message = random.randrange(1, 100, 1)
-                        print(random_message)
-                        if random_message in range (1, self.chance + 1):
-                            self.sender(id, self.sayRandom())
+    def check_message(self, received_message, chat_id):
+        if re.match("max chance", received_message):
+            word_list = received_message.split()
+            if len(word_list) == 3 and int(word_list[-1]) in range (0,101):
+                chance = int(word_list[-1])
+                self.sender(
+                    chat_id, 
+                    f"Установлен шанс ответа {self.change_chance(chance)}"
+                )
+            else:
+                self.sender(
+                    chat_id, 
+                    "Неправильная команда"
+                )
+        else:
+            random_message = random.randrange(1, 100, 1)
+            if random_message in range (1, self.chance + 1):
+                self.sender(chat_id, self.sayRandom())
     
+    def listen(self):
+        while True:
+            try:
+                """Отслеживаем каждое событие в беседе."""
+                for event in self.longpoll.listen():
+                    if event.type == VkBotEventType.MESSAGE_NEW and event.from_chat and event.message.get("text") != "":                                                        
+                        msg = event.message.get("text").lower()
+                        chat_id = event.chat_id
+                        self.from_id = event.message.get("from_id")
+                        self.check_message(msg, chat_id)
+            except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+                print(e)
+                    
+            
 
 
