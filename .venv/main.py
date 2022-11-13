@@ -8,7 +8,7 @@ vk_session = vk_api.VkApi(token = vk_token)
 session_api = vk_session.get_api()
 longpoll = VkBotLongPoll(vk_session, group_id = 217147732)
 
-def chat_sender(id, text):
+def sender(id, text):
     vk_session.method('messages.send', {
         'chat_id' : id, 
         'message' : text, 
@@ -28,11 +28,11 @@ for event in longpoll.listen():
             if words[0] == "max":
                 try:
                     if words[1] == "chance":
-                        if int(words[2]) in range (0, 100):
-                            chance = words[2]
-                            chat_sender(id, f"Установлен шанс ответа {chance}")
-                        else:
-                            chat_sender(id, "Шанс должен быть в пределах 0-100")
+                        try:
+                            if int(words[2]) in range (0, 100):
+                                chance = words[2]
+                                sender(id, f"Установлен шанс ответа {chance}")
+                        except:
+                            sender(id, "Ожидался шанс в пределах 0-100")
                 except:
-                    chat_sender(id, "Неизвестная команда")
-                    pass
+                    sender(id, "Неизвестная команда")
