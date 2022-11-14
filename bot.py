@@ -1,10 +1,11 @@
 import random
 import requests
 import re
+from config import MAX_ID
 
 import vk_api
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
-from models import User
+# from models import User
 import utils
 
 class Bot:
@@ -80,54 +81,46 @@ class Bot:
                 self.messageSender(chat_id, "Так что тебя конкретно интересует, сладкий?")
         
         elif fwd:      
-            fwd_user = utils.get_user_by_id(fwd['from_id'])  
-            user_name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']   
-            
-            if re.match("пред", received_message):  
-                fwd_user.warns += 1
-                fwd_user.save()
-
-                self.vk_session.method('messages.send', {
-                    'chat_id' : msg['peer_id'] - 2000000000,
-                    'message' : f'{user_name}, вам выдано предупреждение!\nВсего предупреждений: {fwd_user.warns}/3',
-                    'random_id' : 0,
-                })
-                
-                if fwd_user.warns >= 3:
-                    self.vk_session.method('messages.removeChatUser', {
-                        'user_id' : fwd_user.vk_id,
-                        'chat_id' : msg['peer_id'] - 2000000000,
-                    })
-                    fwd_user.warns = 0
-                    fwd_user.save()
-                    
-            elif re.match("бан", received_message):
-                if self.isAdmin(chat_id, user_id):
-                    self.vk_session.method('messages.removeChatUser', {
-                        'user_id' : fwd['from_id'],
-                        'chat_id' : msg['peer_id'] - 2000000000,
-                    })
-                    
-            elif re.match("снять пред", received_message):
-                if fwd_user.warns > 0:
-                    fwd_user.warns -= 1
-                    fwd_user.save()
-                    self.vk_session.method('messages.send', {
-                        'chat_id' : msg['peer_id'] - 2000000000,
-                        'message' : f'С пользователя {user_name} снято 1 предупреждение.',
-                        'random_id' : 0,
-                    })
-                    
-                else:
-                    self.vk_session.method('messages.send', {
-                    'chat_id' : msg['peer_id'] - 2000000000,
-                    'message' : f'У пользователя {user_name} нет предупреждений.',
-                    'random_id' : 0,
-                })
-                    
+            fwd_user = utils.get_user_by_id(fwd['from_id'])
+            if fwd_user.vk_id == -int(MAX_ID):
+                pass
             else:
-                self.saySomething(chat_id)
-            
+                user_name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']   
+            if self.isAdmin(chat_id, user_id):
+                if re.match("пред", received_message): 
+                    if self.isAdmin(chat_id, fwd_user.vk_id):
+                        self.messageSender(chat_id, 'Не получится!')
+                    else:
+                        fwd_user.warns += 1
+                        fwd_user.save()
+                        self.messageSender(chat_id, f'{user_name}, вам выдано предупреждение!\nВсего предупреждений: {fwd_user.warns}/3')
+                        
+                        if fwd_user.warns >= 3:
+                            self.vk_session.method('messages.removeChatUser', {
+                                'user_id' : fwd_user.vk_id,
+                                'chat_id' : msg['peer_id'] - 2000000000,
+                            })
+                            fwd_user.warns = 0
+                            fwd_user.save()
+                        
+                elif re.match("снять пред", received_message):
+                    if fwd_user.warns > 0:
+                        fwd_user.warns -= 1
+                        fwd_user.save()
+                        self.messageSender(chat_id, f"С пользователя {user_name} снято 1 предупреждение.")   
+                    else:
+                        self.messageSender(chat_id, f"У пользователя {user_name} нет предупреждений.")       
+                        
+                elif re.match("бан", received_message):
+                    if self.isAdmin(chat_id, fwd_user.vk_id):
+                        self.messageSender(chat_id, 'Не получится!')
+                    else:
+                        self.vk_session.method('messages.removeChatUser', {
+                            'user_id' : fwd['from_id'],
+                            'chat_id' : msg['peer_id'] - 2000000000,
+                        })
+            else:
+                self.messageSender(chat_id, "У вас недостаточно прав для данной команды!")
         else:
             self.saySomething(chat_id)
     
@@ -142,7 +135,7 @@ class Bot:
                         text = msg['text'].lower()
                         user_id = msg['from_id']
                         chat_id = event.chat_id
-                        user = utils.get_user_by_id(user_id)
+                        # user = utils.get_user_by_id(user_id)
                         fwd = self.vk_session.method('messages.getByConversationMessageId', {
                             'conversation_message_ids' : msg ['conversation_message_id'],
                             'peer_id' : msg['peer_id']
