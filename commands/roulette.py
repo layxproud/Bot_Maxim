@@ -34,7 +34,7 @@ def roulette(bot, chat_id, word_list, user):
         on_what = word_list[1]
         bet = int(word_list[-1])
         if bet in range (0, user.chips + 1):
-            if on_what == "черное" or "красное" or "зеленое":
+            if on_what in ["черное", "красное", "зеленое"]:
                 if dict[number] == on_what:
                     winner(bot, user, bet, number, chat_id)
                 else:
