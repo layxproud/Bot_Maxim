@@ -1,0 +1,6 @@
+# ignore venv
+.venv
+__pycache__
+*.db
+*.txt
+config.py
