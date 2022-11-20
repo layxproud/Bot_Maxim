@@ -2,6 +2,7 @@ import random
 import requests
 import re
 from config import MAX_ID
+from commandhandler import *
 
 import vk_api
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
@@ -49,78 +50,43 @@ class Bot:
         return is_admin
     
     def saySomething(self, chat_id):
-        """Функция проверки на статус администратора"""
-        random_message = random.randrange(1, 100, 1)
-        if random_message in range (1, self.chance + 1):
+        """Функция говорения заготовленных фраз"""
+        can_i_speak = random.randrange(1, 100, 1)
+        if can_i_speak in range (1, self.chance + 1):
             self.messageSender(chat_id, self.randomLine())
     
-    def checkMessage(self, received_message, chat_id, user_id, fwd, msg):
+    def checkMessage(self, received_message, chat_id, user_id):
         """Обработчик сообщений"""
         word_list = received_message.split()
         
         if re.match("макс шанс", received_message):
-            if self.isAdmin(chat_id, user_id):
-                if len(word_list) == 3 and int(word_list[-1]) in range (0, 101):
-                    chance = int(word_list[-1])
-                    self.messageSender(chat_id, f"Установлен шанс ответа {self.changeChance(chance)}")
-                else:
-                    self.messageSender(chat_id, "Ожидаемый ввод: макс шанс число_от_0_до_100")
-            else:
-              self.messageSender(chat_id, "Команда доступна только администраторам")
-              
+            setChance(self, word_list, chat_id, user_id)  
+        elif re.match("макс инфа", received_message):
+            randomchance(self, word_list, chat_id)
         elif re.match("доброе утро", received_message):  
             self.messageSender(chat_id, "Доброе утро, котенок &#128573;")
-            
         elif re.match("спокойной ночи", received_message):  
             self.messageSender(chat_id, "Спокойной ночи, сладкий &#127800;")
-         
-        elif re.match("макс инфа", received_message):
-            if len(word_list) > 2:
-                self.messageSender(chat_id, f"Ммм, шанс этого {random.randrange(1, 100, 1)}")
+        else:
+            self.saySomething(chat_id)
+                
+    def checkFwdMessage(self, received_message, chat_id, user_id, fwd):
+        """Обработчик пересланных сообщений"""      
+        fwd_user = utils.get_user_by_id(fwd['from_id'])
+        if fwd_user.vk_id == -int(MAX_ID):
+            user_name = "Бот Максим"
+        else:
+            user_name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']  
+                
+        if self.isAdmin(chat_id, user_id):
+            if re.match("пред", received_message): 
+                warn(self, chat_id, fwd_user, user_name)             
+            elif re.match("снять пред", received_message):
+                unwarn(self, chat_id, fwd_user, user_name)                     
+            elif re.match("бан", received_message):
+                ban(self, chat_id, fwd_user, user_name, fwd)
             else:
-                self.messageSender(chat_id, "Так что тебя конкретно интересует, сладкий?")
-        
-        elif fwd:      
-            fwd_user = utils.get_user_by_id(fwd['from_id'])
-            if fwd_user.vk_id == -int(MAX_ID):
-                pass
-            else:
-                user_name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']   
-            if self.isAdmin(chat_id, user_id):
-                if re.match("пред", received_message): 
-                    if self.isAdmin(chat_id, fwd_user.vk_id):
-                        self.messageSender(chat_id, 'Не получится!')
-                    else:
-                        fwd_user.warns += 1
-                        fwd_user.save()
-                        self.messageSender(chat_id, f'{user_name}, вам выдано предупреждение!\nВсего предупреждений: {fwd_user.warns}/3')
-                        
-                        if fwd_user.warns >= 3:
-                            self.vk_session.method('messages.removeChatUser', {
-                                'user_id' : fwd_user.vk_id,
-                                'chat_id' : msg['peer_id'] - 2000000000,
-                            })
-                            fwd_user.warns = 0
-                            fwd_user.save()
-                        
-                elif re.match("снять пред", received_message):
-                    if fwd_user.warns > 0:
-                        fwd_user.warns -= 1
-                        fwd_user.save()
-                        self.messageSender(chat_id, f"С пользователя {user_name} снято 1 предупреждение.")   
-                    else:
-                        self.messageSender(chat_id, f"У пользователя {user_name} нет предупреждений.")       
-                        
-                elif re.match("бан", received_message):
-                    if self.isAdmin(chat_id, fwd_user.vk_id):
-                        self.messageSender(chat_id, 'Не получится!')
-                    else:
-                        self.vk_session.method('messages.removeChatUser', {
-                            'user_id' : fwd['from_id'],
-                            'chat_id' : msg['peer_id'] - 2000000000,
-                        })
-            else:
-                self.messageSender(chat_id, "У вас недостаточно прав для данной команды!")
+                self.messageSender(chat_id, "У вас недостаточно прав для данной команды!") 
         else:
             self.saySomething(chat_id)
     
@@ -135,7 +101,6 @@ class Bot:
                         text = msg['text'].lower()
                         user_id = msg['from_id']
                         chat_id = event.chat_id
-                        # user = utils.get_user_by_id(user_id)
                         fwd = self.vk_session.method('messages.getByConversationMessageId', {
                             'conversation_message_ids' : msg ['conversation_message_id'],
                             'peer_id' : msg['peer_id']
@@ -146,7 +111,10 @@ class Bot:
                         else:
                             fwd = None
                         
-                        self.checkMessage(text, chat_id, user_id, fwd, msg)
+                        if fwd:
+                            self.checkFwdMessage(text, chat_id, user_id, fwd)
+                        else:
+                            self.checkMessage(text, chat_id, user_id)
 
             except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
                 print(e)
