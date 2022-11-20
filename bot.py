@@ -1,7 +1,6 @@
 import random
 import requests
 import re
-from config import MAX_ID
 from commandhandler import *
 
 import vk_api
