@@ -92,7 +92,7 @@ class Bot:
             elif re.match("бан", received_message):
                 ban(self, chat_id, fwd_user, fwd)
             else:
-                self.messageSender(chat_id, "У вас недостаточно прав для данной команды!") 
+                self.saySomething(chat_id)
         else:
             self.saySomething(chat_id)
     
