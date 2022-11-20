@@ -56,6 +56,9 @@ class Bot:
     
     def checkMessage(self, received_message, chat_id, user_id):
         """Обработчик сообщений"""
+        user = utils.get_user_by_id(user_id)
+        user.name = self.vk_session.method('users.get', {'user_id' : user_id})[0]['first_name']  
+        user.save()
         word_list = received_message.split()
         
         if re.match("макс шанс", received_message):
@@ -66,6 +69,10 @@ class Bot:
             self.messageSender(chat_id, "Доброе утро, котенок &#128573;")
         elif re.match("спокойной ночи", received_message):  
             self.messageSender(chat_id, "Спокойной ночи, сладкий &#127800;")
+        elif re.match("рулетка", received_message):
+            roulette(self, chat_id, word_list, user)
+        elif re.match("мой баланс", received_message):
+            rouletteBalance(self, chat_id, user)
         else:
             self.saySomething(chat_id)
                 
@@ -73,17 +80,17 @@ class Bot:
         """Обработчик пересланных сообщений"""      
         fwd_user = utils.get_user_by_id(fwd['from_id'])
         if fwd_user.vk_id == -int(MAX_ID):
-            user_name = "Бот Максим"
+            fwd_user.name = "Бот Максим"
         else:
-            user_name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']  
+            fwd_user.name = self.vk_session.method('users.get', {'user_id' : fwd_user.vk_id})[0]['first_name']  
                 
         if self.isAdmin(chat_id, user_id):
             if re.match("пред", received_message): 
-                warn(self, chat_id, fwd_user, user_name)             
+                warn(self, chat_id, fwd_user)             
             elif re.match("снять пред", received_message):
-                unwarn(self, chat_id, fwd_user, user_name)                     
+                unwarn(self, chat_id, fwd_user)                     
             elif re.match("бан", received_message):
-                ban(self, chat_id, fwd_user, user_name, fwd)
+                ban(self, chat_id, fwd_user, fwd)
             else:
                 self.messageSender(chat_id, "У вас недостаточно прав для данной команды!") 
         else:

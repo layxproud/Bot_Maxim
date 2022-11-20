@@ -8,6 +8,8 @@ class User(Model):
         db_table = 'Users'
     vk_id = IntegerField()
     warns = IntegerField()
+    chips = IntegerField()
+    name = TextField()
     
 if __name__ == "__main__":
     db.create_tables([User])
