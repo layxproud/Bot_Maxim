@@ -29,8 +29,8 @@ def give_dealer_card(player):
 
 def winner(bot, user, player, chat_id):
     bot.message_sender(chat_id, "Победа!\n"
-                       f"Вы выиграли {player.bet * 2} фишек")
-    user.chips += player.bet * 2
+                       f"Вы получили {player.bet} фишек")
+    user.chips += player.bet
     user.save()
     clean_player(player)
 
@@ -82,8 +82,9 @@ def check_score(bot, chat_id, player, user):
     show_score(bot, chat_id, player)
     if player.player_score >= 21 or player.dealer_score >= 21:
         situation(bot, chat_id, player, user)
-    bot.message_sender(chat_id, "Напишите 'взять карту', чтобы продолжить"
-                       " игру, или 'хватит', чтобы завершить")
+    else:
+        bot.message_sender(chat_id, "Напишите 'взять карту', чтобы продолжить"
+                           " игру, или 'хватит', чтобы завершить")
 
 
 def situation(bot, chat_id, player, user):
@@ -107,12 +108,15 @@ def blackjack(bot, chat_id, user, player, word_list):
     elif len(word_list) == 2 and \
             bot.can_convert_to_int(word_list[-1]):
         bet = int(word_list[-1])
-        player.bet = bet
-        player.is_playing = 1
+        if bet < 100:
+            bot.message_sender(chat_id, "Минимальная ставка - 100!")
+        else:
+            player.bet = bet
+            player.is_playing = 1
 
-        give_player_card(player)
-        give_player_card(player)
-        give_dealer_card(player)
-        give_dealer_card(player)
+            give_player_card(player)
+            give_player_card(player)
+            give_dealer_card(player)
+            give_dealer_card(player)
 
-        check_score(bot, chat_id, player, user)
+            check_score(bot, chat_id, player, user)

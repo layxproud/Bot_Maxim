@@ -74,24 +74,31 @@ class Bot:
         word_list = received_message.split()
 
         if re.match("макс шанс", received_message):
+            """Установка шанса ответа"""
             set_chance(self, word_list, chat_id, user_id) # noqa
 
         elif re.match("макс инфа", received_message):
+            """Получение вероятности события"""
             random_chance(self, word_list, chat_id) # noqa
 
         elif re.match("доброе утро", received_message):
+            """Желает доброе утро"""
             self.message_sender(chat_id, "Доброе утро, котенок &#128573;")
 
         elif re.match("спокойной ночи", received_message):
+            """Желает спокойной ночи"""
             self.message_sender(chat_id, "Спокойной ночи, сладкий &#127800;")
 
         elif re.match("рулетка", received_message):
+            """Игра в рулетку"""
             roulette(self, chat_id, word_list, user) # noqa
 
         elif re.match("мой баланс", received_message):
+            """Проверка баланса фишек"""
             self.my_balance(chat_id, user)
 
         elif re.match("блэкджек", received_message):
+            """Игра в блэкджек"""
             if bjplayer.is_playing:
                 self.message_sender(chat_id, "Вы уже играете! "
                                     "Напишите 'Стоп игра', "
@@ -101,18 +108,22 @@ class Bot:
 
         elif re.match("взять карту", received_message) \
                 and bjplayer.is_playing:
+            """Взять карту в блэкджеке"""
             take_card(self, chat_id, bjplayer, user) # noqa
 
         elif re.match("хватит", received_message) \
                 and bjplayer.is_playing:
+            """Отказаться от карт в блэкджеке"""
             not_take_card(self, chat_id, bjplayer, user) # noqa
 
         elif re.match("стоп игра", received_message) \
                 and bjplayer.is_playing:
+            """Остановить игру в блэкджек"""
             clean_player(bjplayer) # noqa
             self.message_sender(chat_id, "Вы завершили игру.")
 
         else:
+            """Начислить пользователю 10 фишек и сказать что-то"""
             user.chips += 10
             user.save()
             self.say_something(chat_id)
@@ -121,26 +132,25 @@ class Bot:
         """Обработчик пересланных сообщений"""
         user = utils.get_user_by_id(user_id)
         fwd_user = utils.get_user_by_id(fwd['from_id'])
+
         if fwd_user.vk_id == -int(MAX_ID): # noqa
             fwd_user.name = "Бот Максим"
         else:
             fwd_user.name = self.vk_session.method(
                 'users.get', {'user_id': fwd_user.vk_id})[0]['first_name']
 
-        if self.is_admin(chat_id, user_id):
-            if re.match("пред", received_message):
-                warn(self, chat_id, fwd_user) # noqa
-            elif re.match("снять пред", received_message):
-                unwarn(self, chat_id, fwd_user) # noqa
-            elif re.match("бан", received_message):
-                ban(self, chat_id, fwd_user, fwd) # noqa
-            else:
-                fwd_user.chips += 10
-                fwd_user.save()
-                self.say_something(chat_id)
+        if re.match("пред", received_message):
+            warn(self, chat_id, fwd_user, user) # noqa
+
+        elif re.match("снять пред", received_message):
+            unwarn(self, chat_id, fwd_user, user) # noqa
+
+        elif re.match("бан", received_message):
+            ban(self, chat_id, fwd_user, fwd, user) # noqa
+
         else:
-            user.chips += 10
-            user.save()
+            fwd_user.chips += 10
+            fwd_user.save()
             self.say_something(chat_id)
 
     def listen(self):

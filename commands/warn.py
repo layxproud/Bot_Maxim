@@ -1,6 +1,9 @@
-def warn(bot, chat_id, fwd_user):
+def warn(bot, chat_id, fwd_user, user):
     if bot.is_admin(chat_id, fwd_user.vk_id):
-        bot.message_sender(chat_id, 'Не получится!')
+        bot.message_sender(chat_id, "Не получится!")
+
+    elif not bot.is_admin(chat_id, user.vk_id):
+        bot.message_sender(chat_id, "Команда доступна только администраторам!")
 
     else:
         fwd_user.warns += 1
@@ -17,8 +20,11 @@ def warn(bot, chat_id, fwd_user):
             fwd_user.save()
 
 
-def unwarn(bot, chat_id, fwd_user):
-    if fwd_user.warns > 0:
+def unwarn(bot, chat_id, fwd_user, user):
+    if not bot.is_admin(chat_id, user.vk_id):
+        bot.message_sender(chat_id, "Команда доступна только администраторам!")
+
+    elif fwd_user.warns > 0:
         fwd_user.warns -= 1
         fwd_user.save()
         bot.message_sender(chat_id, f"С пользователя @id{fwd_user.vk_id}"
