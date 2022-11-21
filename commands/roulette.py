@@ -12,7 +12,7 @@ dict = {0: 'зеленое', 1: 'красное', 2: 'черное', 3: 'кра�
         36: 'черное'}
 
 
-def start_roulette(bot, chat_id, user):
+def start_roulette(bot, chat_id):
     bot.message_sender(chat_id, "Делайте ставку. Возможные ставки: "
                        "зеленое, красное, черное, чет, нечет. "
                        "Команда: Рулетка СТАВКА СУММА_СТАВКИ")
@@ -20,27 +20,22 @@ def start_roulette(bot, chat_id, user):
 
 def winner(bot, user, bet, number, chat_id):
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
-                       "Вы победили!")
+                       f"Вы победили и заработали {bet * 2} фишек!")
     user.chips += bet * 2
     user.save()
 
 
 def loser(bot, user, bet, number, chat_id):
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
-                       "Вы проиграли!")
+                       f"Вы проиграли и потеряли {bet} фишек!")
     user.chips -= bet
     user.save()
-
-
-def roulette_balance(bot, chat_id, user):
-    bot.message_sender(chat_id, f"@id{user.vk_id}({user.name}), "
-                       f"на вашем счету {user.chips} фишек")
 
 
 def roulette(bot, chat_id, word_list, user):
     number = random.randrange(0, 37, 1)
     if len(word_list) == 1:
-        start_roulette(bot, chat_id, user)
+        start_roulette(bot, chat_id)
     elif len(word_list) == 3:
         on_what = word_list[1]
         bet = int(word_list[-1])
