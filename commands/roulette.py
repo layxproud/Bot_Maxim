@@ -13,12 +13,14 @@ dict = {0: 'зеленое', 1: 'красное', 2: 'черное', 3: 'кра�
 
 
 def start_roulette(bot, chat_id):
+    """Выводит информационное сообщение"""
     bot.message_sender(chat_id, "Делайте ставку. Возможные ставки: "
                        "зеленое, красное, черное, чет, нечет. "
                        "Команда: Рулетка СТАВКА СУММА_СТАВКИ")
 
 
 def winner(bot, user, bet, number, chat_id):
+    """Объявляет победу"""
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
                        f"Вы победили и получили {bet} фишек!")
     user.chips += bet
@@ -26,6 +28,7 @@ def winner(bot, user, bet, number, chat_id):
 
 
 def loser(bot, user, bet, number, chat_id):
+    """Объявляет поражение"""
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
                        f"Вы проиграли и потеряли {bet} фишек!")
     user.chips -= bet
@@ -33,38 +36,49 @@ def loser(bot, user, bet, number, chat_id):
 
 
 def roulette(bot, chat_id, word_list, user):
+    """Иницализирует игру"""
     number = random.randrange(0, 37, 1)
+
     if len(word_list) == 1:
         start_roulette(bot, chat_id)
+
     elif len(word_list) == 3 and not \
             bot.can_convert_to_int(word_list[1]) and \
             bot.can_convert_to_int(word_list[-1]):
         bet = int(word_list[-1])
+
         if bet < 100:
             bot.message_sender(chat_id, "Минимальная ставка - 100!")
+
         else:
             on_what = word_list[1]
             if bet in range(0, user.chips + 1):
+
                 if on_what in ["черное", "красное", "зеленое"]:
                     if dict[number] == on_what:
                         winner(bot, user, bet, number, chat_id)
                     else:
                         loser(bot, user, bet, number, chat_id)
+
                 elif on_what == "чет":
                     if number % 2 == 0:
                         winner(bot, user, bet, number, chat_id)
                     else:
                         loser(bot, user, bet, number, chat_id)
+
                 elif on_what == "нечет":
                     if number % 2 != 0:
                         winner(bot, user, bet, number, chat_id)
                     else:
                         loser(bot, user, bet, number, chat_id)
+
                 else:
                     bot.message_sender(chat_id, "Нет такого поля")
+
             else:
                 bot.message_sender(chat_id,
                                    "Баланс недостаточен. "
                                    f"Ваш баланс: {user.chips}")
+
     else:
         bot.message_sender(chat_id, "Неправильная команда!")

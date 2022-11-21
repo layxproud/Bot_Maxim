@@ -1,4 +1,5 @@
 def warn(bot, chat_id, fwd_user, user):
+    """Выдает пользователю предупреждение"""
     if bot.is_admin(chat_id, fwd_user.vk_id):
         bot.message_sender(chat_id, "Не получится!")
 
@@ -21,6 +22,7 @@ def warn(bot, chat_id, fwd_user, user):
 
 
 def unwarn(bot, chat_id, fwd_user, user):
+    """Снимает с пользователя предупреждение"""
     if not bot.is_admin(chat_id, user.vk_id):
         bot.message_sender(chat_id, "Команда доступна только администраторам!")
 

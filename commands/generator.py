@@ -4,6 +4,7 @@ generator = pipeline('text-generation', model='EleutherAI/gpt-neo-1.3B')
 
 
 def generate_phrase():
+    """Генерирует фразу по контексту"""
     context = "text"
     output = generator(context, max_length=50, do_sample=True, temperature=0.9)
     with open('dl.txt', 'w') as f:
