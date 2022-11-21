@@ -46,6 +46,11 @@ class Bot:
                 break
         return admin
 
+    def my_balance(self, chat_id, user):
+        """Функция проверки баланса"""
+        self.message_sender(chat_id, f"@id{user.vk_id}({user.name}), "
+                            f"на вашем счету {user.chips} фишек")
+
     def say_something(self, chat_id):
         """Функция говорения заготовленных фраз"""
         can_i_speak = random.randrange(1, 100, 1)
@@ -55,6 +60,7 @@ class Bot:
     def check_message(self, received_message, chat_id, user_id):
         """Обработчик сообщений"""
         user = utils.get_user_by_id(user_id)
+        bjplayer = utils.get_bjplayer_by_id(user_id)
         user.name = self.vk_session.method(
             'users.get', {'user_id': user_id})[0]['first_name']
         user.save()
@@ -62,16 +68,43 @@ class Bot:
 
         if re.match("макс шанс", received_message):
             set_chance(self, word_list, chat_id, user_id) # noqa
+
         elif re.match("макс инфа", received_message):
             random_chance(self, word_list, chat_id) # noqa
+
         elif re.match("доброе утро", received_message):
             self.message_sender(chat_id, "Доброе утро, котенок &#128573;")
+
         elif re.match("спокойной ночи", received_message):
             self.message_sender(chat_id, "Спокойной ночи, сладкий &#127800;")
+
         elif re.match("рулетка", received_message):
             roulette(self, chat_id, word_list, user) # noqa
+
         elif re.match("мой баланс", received_message):
-            roulette_balance(self, chat_id, user) # noqa
+            self.my_balance(chat_id, user)
+
+        elif re.match("блэкджек", received_message):
+            if bjplayer.is_playing:
+                self.message_sender(chat_id, "Вы уже играете! "
+                                    "Напишите 'Стоп игра', "
+                                    "если хотите закончить")
+            else:
+                blackjack(self, chat_id, user, bjplayer, word_list) # noqa
+
+        elif re.match("взять карту", received_message) \
+                and bjplayer.is_playing:
+            take_card(self, chat_id, bjplayer, user) # noqa
+
+        elif re.match("хватит", received_message) \
+                and bjplayer.is_playing:
+            not_take_card(self, chat_id, bjplayer, user) # noqa
+
+        elif re.match("стоп игра", received_message) \
+                and bjplayer.is_playing:
+            clean_player(bjplayer) # noqa
+            self.message_sender(chat_id, "Вы завершили игру.")
+
         else:
             user.chips += 10
             user.save()
@@ -107,7 +140,7 @@ class Bot:
         """Основная функция"""
         while True:
             try:
-                """Отслеживаем каждое событие в беседе."""
+                """Отслеживаем каждое событие в беседе"""
                 for event in self.longpoll.listen():
                     if event.type == VkBotEventType.MESSAGE_NEW and \
                             event.from_chat and \
