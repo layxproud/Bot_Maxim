@@ -1,12 +1,11 @@
 import peewee
 
-db1 = peewee.SqliteDatabase('users.db')
-db2 = peewee.SqliteDatabase('bjplayers.db')
+db = peewee.SqliteDatabase('data.db')
 
 
 class User(peewee.Model):
     class Meta:
-        database = db1
+        database = db
         db_table = 'Users'
     vk_id = peewee.IntegerField()
     warns = peewee.IntegerField()
@@ -16,7 +15,7 @@ class User(peewee.Model):
 
 class Blackjack(peewee.Model):
     class Meta:
-        database = db2
+        database = db
         db_table = 'BlacjackPlayers'
     vk_id = peewee.IntegerField()
     player_deck = peewee.TextField()
@@ -28,5 +27,5 @@ class Blackjack(peewee.Model):
 
 
 if __name__ == "__main__":
-    db1.create_tables([User])
-    db2.create_tables([Blackjack])
+    db.create_tables([User])
+    db.create_tables([Blackjack])
