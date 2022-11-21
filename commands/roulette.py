@@ -9,46 +9,39 @@ dict = {0: 'зеленое', 1: 'красное', 2: 'черное', 3: 'кра�
         24: 'черное', 25: 'красное', 26: 'черное', 27: 'красное',
         28: 'черное', 29: 'красное', 30: 'черное', 31: 'красное',
         32: 'черное', 33: 'красное', 34: 'черное', 35: 'красное',
-        36: 'черное'
-        }
+        36: 'черное'}
 
 
 def start_roulette(bot, chat_id, user):
-    if user.chips == 0:
-        bot.message_sender(chat_id, f"Игроку @id{user.vk_id}({user.name}) "
-                           "выдано 5000 фишек"
-                           )
-        user.chips += 5000
-        user.save()
+    bot.message_sender(chat_id, "Делайте ставку. Возможные ставки: "
+                       "зеленое, красное, черное, чет, нечет. "
+                       "Команда: Рулетка СТАВКА СУММА_СТАВКИ")
 
 
 def winner(bot, user, bet, number, chat_id):
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
-                       "Вы победили!"
-                       )
+                       "Вы победили!")
     user.chips += bet * 2
     user.save()
 
 
 def loser(bot, user, bet, number, chat_id):
     bot.message_sender(chat_id, f"Выпало {number}, {dict[number]}. "
-                       "Вы проиграли!"
-                       )
+                       "Вы проиграли!")
     user.chips -= bet
     user.save()
 
 
 def roulette_balance(bot, chat_id, user):
     bot.message_sender(chat_id, f"@id{user.vk_id}({user.name}), "
-                       f"на вашем счету {user.chips} фишек"
-                       )
+                       f"на вашем счету {user.chips} фишек")
 
 
 def roulette(bot, chat_id, word_list, user):
-    start_roulette(bot, chat_id, user)
     number = random.randrange(0, 37, 1)
-
-    if len(word_list) == 3:
+    if len(word_list) == 1:
+        start_roulette(bot, chat_id, user)
+    elif len(word_list) == 3:
         on_what = word_list[1]
         bet = int(word_list[-1])
         if bet in range(0, user.chips + 1):
@@ -70,11 +63,8 @@ def roulette(bot, chat_id, word_list, user):
             else:
                 bot.message_sender(chat_id, "Нет такого поля")
         else:
-            bot.message_sender(chat_id, f"Баланс недостаточен. Ваш баланс: "
-                               f"{user.chips}"
-                               )
+            bot.message_sender(chat_id,
+                               "Баланс недостаточен. "
+                               f"Ваш баланс: {user.chips}")
     else:
-        bot.message_sender(chat_id, "Делайте ставку. Возможные ставки: "
-                           "зеленое, красное, черное, чет, нечет. "
-                           "Команда: Рулетка СТАВКА СУММА_СТАВКИ"
-                           )
+        bot.message_sender(chat_id, "Неправильная команда!")

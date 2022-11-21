@@ -21,8 +21,7 @@ class Bot:
         self.vk_session.method('messages.send', {
             'chat_id': id,
             'message': text,
-            'random_id': 0
-        })
+            'random_id': 0})
 
     def change_chance(self, chance):
         """Функция изменения шанса отправки случайных сообщений"""
@@ -51,9 +50,9 @@ class Bot:
         """Функция говорения заготовленных фраз"""
         can_i_speak = random.randrange(1, 100, 1)
         if can_i_speak in range(1, self.chance + 1):
-            self.message_sender(chat_id, self.randomLine())
+            self.message_sender(chat_id, self.random_line())
 
-    def checkMessage(self, received_message, chat_id, user_id):
+    def check_message(self, received_message, chat_id, user_id):
         """Обработчик сообщений"""
         user = utils.get_user_by_id(user_id)
         user.name = self.vk_session.method(
@@ -74,10 +73,13 @@ class Bot:
         elif re.match("мой баланс", received_message):
             roulette_balance(self, chat_id, user) # noqa
         else:
-            self.saySomething(chat_id)
+            user.chips += 10
+            user.save()
+            self.say_something(chat_id)
 
-    def checkFwdMessage(self, received_message, chat_id, user_id, fwd):
+    def check_fwd_message(self, received_message, chat_id, user_id, fwd):
         """Обработчик пересланных сообщений"""
+        user = utils.get_user_by_id(user_id)
         fwd_user = utils.get_user_by_id(fwd['from_id'])
         if fwd_user.vk_id == -int(MAX_ID): # noqa
             fwd_user.name = "Бот Максим"
@@ -85,7 +87,7 @@ class Bot:
             fwd_user.name = self.vk_session.method(
                 'users.get', {'user_id': fwd_user.vk_id})[0]['first_name']
 
-        if self.isAdmin(chat_id, user_id):
+        if self.is_admin(chat_id, user_id):
             if re.match("пред", received_message):
                 warn(self, chat_id, fwd_user) # noqa
             elif re.match("снять пред", received_message):
@@ -93,9 +95,13 @@ class Bot:
             elif re.match("бан", received_message):
                 ban(self, chat_id, fwd_user, fwd) # noqa
             else:
-                self.saySomething(chat_id)
+                fwd_user.chips += 10
+                fwd_user.save()
+                self.say_something(chat_id)
         else:
-            self.saySomething(chat_id)
+            user.chips += 10
+            user.save()
+            self.say_something(chat_id)
 
     def listen(self):
         """Основная функция"""
@@ -114,8 +120,7 @@ class Bot:
                             'messages.getByConversationMessageId',
                             {'conversation_message_ids':
                                 msg['conversation_message_id'],
-                                'peer_id': msg['peer_id']}
-                            )['items'][0]
+                                'peer_id': msg['peer_id']})['items'][0]
 
                         if 'reply_message' in fwd:
                             fwd = fwd['reply_message']
@@ -123,11 +128,10 @@ class Bot:
                             fwd = None
 
                         if fwd:
-                            self.checkFwdMessage(text, chat_id, user_id, fwd)
+                            self.check_fwd_message(text, chat_id, user_id, fwd)
                         else:
-                            self.checkMessage(text, chat_id, user_id)
+                            self.check_message(text, chat_id, user_id)
 
             except (requests.exceptions.ReadTimeout,
-                    requests.exceptions.ConnectionError
-                    ) as e:
+                    requests.exceptions.ConnectionError) as e:
                 print(e)

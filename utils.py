@@ -8,7 +8,7 @@ def get_user_by_id(user_id):
         User(
             vk_id=user_id,
             warns=0,
-            chips=0,
+            chips=1000,
             name=""
         ).save()
         return User().get(vk_id=user_id)
