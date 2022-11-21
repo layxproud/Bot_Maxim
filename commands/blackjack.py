@@ -104,7 +104,8 @@ def situation(bot, chat_id, player, user):
 def blackjack(bot, chat_id, user, player, word_list):
     if len(word_list) == 1:
         start_blackjack(bot, chat_id)
-    elif len(word_list) == 2:
+    elif len(word_list) == 2 and \
+            bot.can_convert_to_int(word_list[-1]):
         bet = int(word_list[-1])
         player.bet = bet
         player.is_playing = 1

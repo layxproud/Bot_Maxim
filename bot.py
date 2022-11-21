@@ -28,6 +28,13 @@ class Bot:
         self.chance = chance
         return self.chance
 
+    def can_convert_to_int(self, string):
+        try:
+            int(string)
+            return True
+        except ValueError:
+            return False
+
     def random_line(self):
         """Функция выбора случайного сообщения из файла"""
         with open(self.dir, 'r', encoding='utf-8') as file:

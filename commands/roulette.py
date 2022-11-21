@@ -36,7 +36,9 @@ def roulette(bot, chat_id, word_list, user):
     number = random.randrange(0, 37, 1)
     if len(word_list) == 1:
         start_roulette(bot, chat_id)
-    elif len(word_list) == 3:
+    elif len(word_list) == 3 and not \
+            bot.can_convert_to_int(word_list[1]) and \
+            bot.can_convert_to_int(word_list[-1]):
         on_what = word_list[1]
         bet = int(word_list[-1])
         if bet in range(0, user.chips + 1):
